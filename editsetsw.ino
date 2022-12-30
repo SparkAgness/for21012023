@@ -8,7 +8,7 @@ MicroDS3231 rtc;
 
 uint8_t menu_switcher(); //declaration of func (see below)
 
-bool increm, decrem;
+bool increm, decrem, switch_flag;
 uint16_t clock;
 uint32_t time_enter; //always will be in global-value!!!
 uint8_t sec, minute, hour, week_day, day, month;
