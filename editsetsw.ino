@@ -2,7 +2,7 @@
 #define decrem_pin 5
 #define anti_bounce_switch_helper 1000
 #define anti_bounce 500
-#define switch_num_max 7
+#define switch_num_max 8
 
 #include <microDS3231.h>
 MicroDS3231 rtc;
@@ -90,7 +90,7 @@ void setuper() {
             hour = switcher(&clock, &switch_help);
             break;
         case 3:
-            clock = year;
+            clock = week_day;
             week_day = switcher(&clock, &switch_help);
             break;
         case 4:
@@ -102,7 +102,11 @@ void setuper() {
             month = switcher(&clock, &switch_help);
             break;
         case 6:
-            rtc.setTime(sec, minute, hour, day, month, year); 
+            clock = year;
+	    year = switcher(&clock, &switch_help);
+	    break;
+        case 7:
+            rtc.setTime(sec, minute, hour, day, month, year); //implict type conversation maybe
 	    break;
     }
 }
@@ -119,6 +123,7 @@ decrem = digitalRead(decrem_pin);
  
 switch_helper(increm, decrem, &switch_help);
 menu_switcher(&m_switcher, &switch_help);
+setuper();
     if (m_switcher) {
 	Serial.println("Attention, please! Setting true time is going...");
         switcher(&clock, &switch_help);
