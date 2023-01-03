@@ -21,8 +21,33 @@ struct val_flag {    //will be used with switch_helper
     bool flag;       //will return value of switcher's flag
 } switch_help;
 
-struct val_flag *pSwitch_help;
-pSwitch_help = &switch_help;
+struct val_flag *pSwitch_help = &switch_help;
+
+struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch_help) {
+//helps to avoid effect of changing clock's values during menu_switcher() using
+    
+    if (!increm && decrem && millis() - time_enter > anti_bounce) {
+        pSwitch_help->val = 1;
+        pSwitch_help->flag = 1;
+        time_enter = millis();
+    }
+    if (increm && !decrem && millis() - time_enter > anti_bounce) {
+        pSwitch_help->val = 2;
+        pSwitch_help->flag = 1;
+	time_enter = millis();
+    }
+    if (!increm && !decrem && millis() - time_enter > anti_bounce) {
+        pSwitch_help->val = 3;
+        pSwitch_help->flag = 1;
+        time_enter = millis();
+    }
+    if (increm && decrem && millis() - time_enter > anti_bounce) {
+        pSwitch_help->flag = 0;
+        time_enter = millis();
+    }
+
+    return *pSwitch_help;
+}
 
 uint8_t menu_switcher(uint8_t *m_switcher, struct val_flag *pSwitch_help) { 
 //switches to setup clock menu
@@ -40,7 +65,7 @@ uint8_t menu_switcher(uint8_t *m_switcher, struct val_flag *pSwitch_help) {
 
 uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) { 
     clck = &clock; //it's necessary to clock be changed from this func
-    if (pSwitch_help->val == 2 && pSwitch->flag == 0) {           
+    if (pSwitch_help->val == 2 && pSwitch_help->flag == 0) {           
         *clck -= 1;
         pSwitch_help->val = 0; //so that clock++ will be once
         Serial.println(*clck);
@@ -58,23 +83,23 @@ void setuper() {
     switch (m_switcher) {
         case 1: 
             clock = minute; //here & below 1st string is for comfortable setting clock variables
-            minute = switcher(&clock, struct *pSwitch_help);
+            minute = switcher(&clock, &switch_help);
             break;
         case 2:
             clock = hour;
-            hour = switcher(&clock, struct *pSwitch_help);
+            hour = switcher(&clock, &switch_help);
             break;
         case 3:
             clock = year;
-            week_day = switcher(&clock, struct *pSwitch_help);
+            week_day = switcher(&clock, &switch_help);
             break;
         case 4:
             clock = day;
-            day = switcher(&clock, struct *pSwitch_help);
+            day = switcher(&clock, &switch_help);
             break;
         case 5:
             clock = month;
-            month = switcher(&clock, struct *pSwitch_help);
+            month = switcher(&clock, &switch_help);
             break;
         case 6:
             rtc.setTime(sec, minute, hour, day, month, year); 
@@ -92,10 +117,10 @@ void loop() {
 increm = digitalRead(increm_pin);
 decrem = digitalRead(decrem_pin);
  
-val_flag(increm, decrem, struct *pSwitch_help);
-menu_switcher(&m_switcher, struct *pSwitch_help);
+switch_helper(increm, decrem, &switch_help);
+menu_switcher(&m_switcher, &switch_help);
     if (m_switcher) {
 	Serial.println("Attention, please! Setting true time is going...");
-        switcher(&clock);
+        switcher(&clock, &switch_help);
     }
 }
