@@ -13,11 +13,6 @@ bool increm, decrem;
 uint16_t clock;
 uint32_t time_enter; //always will be in global-value!!!
 uint8_t sec, minute, hour, week_day, day, month;
-uint8_t *pMinute = &minute;
-uint8_t *pHour = &hour;
-uint8_t *pWeek_day = &week_day;
-uint8_t *pDay = &day;
-uint8_t *pMonth = &month;
 uint16_t year;
 uint8_t m_switcher;
 
@@ -85,10 +80,19 @@ uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) {
 }
 
 void setuper() {
+  uint16_t *clck;
+  clck = &clock;  
     switch (m_switcher) {
         case 1: 
             clock = minute; //here & below 1st string is for comfortable setting clock variables
             minute = switcher(&clock, &switch_help);
+            if (!decrem && minute == 0) {
+              minute = 59;
+              }
+            if (!increm && minute == 59) {
+              minute = 0;
+            }
+                                
             break;
         case 2:
             clock = hour;
@@ -147,4 +151,3 @@ Serial.println(rtc.getDateString());
 
 }
 }
-

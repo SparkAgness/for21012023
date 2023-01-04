@@ -84,22 +84,52 @@ void setuper() {
         case 1: 
             clock = minute; //here & below 1st string is for comfortable setting clock variables
             minute = switcher(&clock, &switch_help);
+            if (!decrem && minute == 0) { //here & bellow if var switches down and draws to 0
+                minute = 59;              //means top a head
+            }
+	    if (!increm && minute == 59) { //here & bellow if var switches up and top a head
+                minute = 0;                //draws to zero
+            }
             break;
         case 2:
             clock = hour;
             hour = switcher(&clock, &switch_help);
+	    if (!decrem && hour == 0) {
+                hour = 12;
+            }
+	    if (!increm && hour == 12) {
+                hour = 0;
+            }
             break;
         case 3:
             clock = week_day;
             week_day = switcher(&clock, &switch_help);
+	    if (!decrem && week_day == 1) {
+                week_day = 7;
+            }
+	    if (!increm && week_day == 7) {
+	        week_day = 1;
+            }
             break;
         case 4:
             clock = day;
             day = switcher(&clock, &switch_help);
+	    if (!decrem && day == 1) {
+                day = 31;
+            }
+	    if (!increm && day == 31) {
+                day = 1;
+            }
             break;
         case 5:
             clock = month;
             month = switcher(&clock, &switch_help);
+	    if (!decrem && month == 1) {
+                month = 12;
+            }
+	    if (!increm && month == 12) {
+                month = 1;
+            }
             break;
         case 6:
             clock = year;
