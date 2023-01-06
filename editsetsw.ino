@@ -1,11 +1,25 @@
+#include <forcedClimate.h>
+#include <microDS3231.h>
+#include <RGBmatrixPanel.h>
+
 #define increm_pin 7
 #define decrem_pin 5
 #define anti_bounce_switch_helper 1000
 #define anti_bounce 500
 #define switch_num_max 8
 
-#include <microDS3231.h>
+#define CLK 11 // these 7 defines are for RGB-matrix 32x64
+#define OE 9
+#define LAT 10
+#define A A0
+#define B A1
+#define C A2
+#define D A3
+
 MicroDS3231 rtc;
+ForcedClimate climateSensor = ForcedClimate();
+
+RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, true, 64); //declare object for matrix, twice-buffer on(true)
 
 uint8_t menu_switcher(); //declaration of func (see below)
 
@@ -22,6 +36,16 @@ struct val_flag {    //will be used with switch_helper
 } switch_help;
 
 struct val_flag *pSwitch_help = &switch_help;
+
+void clock_var_val() {
+    sec = rtc.getSeconds();
+    minute = rtc.getMinutes();
+    hour = rtc.getHours();
+    week_day = rtc.getDay();
+    day = rtc.getDate();
+    month = rtc.getMonth();
+    year = 2023;
+}
 
 struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch_help) {
 //helps to avoid effect of changing clock's values during menu_switcher() using
@@ -145,6 +169,8 @@ void setup() {
 Serial.begin(9600);
 pinMode(increm_pin, INPUT_PULLUP);
 pinMode(decrem_pin, INPUT_PULLUP);
+climateSensor.begin();
+matrix.begin(); //RGB-matrix is started
 }
 
 void loop() {
@@ -157,5 +183,12 @@ setuper();
     if (m_switcher) {
 	Serial.println("Attention, please! Setting true time is going...");
         switcher(&clock, &switch_help);
+    }
+    if (!m_switcher) {
+        clock_var_val();
+        Serial.println(climateSensor.getTemperatureCelcius());
+        Serial.println(climateSensor.getRelativeHumidity());
+        Serial.println(0.75*climateSensor.getPressure());
+ 
     }
 }

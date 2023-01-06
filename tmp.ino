@@ -5,7 +5,10 @@
 #define switch_num_max 7
 
 #include <microDS3231.h>
+#include <forcedClimate.h>
+
 MicroDS3231 rtc;
+ForcedClimate climateSensor = ForcedClimate();
 
 uint8_t menu_switcher(); //declaration of func (see below)
 
@@ -22,6 +25,16 @@ struct val_flag {    //will be used with switch_helper
 } switch_help;
 
 struct val_flag *pSwitch_help = &switch_help;
+
+void clock_var_val() {
+    sec = rtc.getSeconds();
+    minute = rtc.getMinutes();
+    hour = rtc.getHours();
+    week_day = rtc.getDay();
+    day = rtc.getDate();
+    month = rtc.getMonth();
+    year = 2023;
+}
 
 struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch_help) {
 //helps to avoid effect of changing clock's values during menu_switcher() using
@@ -120,6 +133,7 @@ void setup() {
 Serial.begin(9600);
 pinMode(increm_pin, INPUT_PULLUP);
 pinMode(decrem_pin, INPUT_PULLUP);
+climateSensor.begin();
 }
 
 void loop() {
@@ -148,6 +162,10 @@ setuper();
 if (!m_switcher) {
 Serial.println(rtc.getTimeString());
 Serial.println(rtc.getDateString());
-
+clock_var_val();
+Serial.println(climateSensor.getTemperatureCelcius());
+Serial.println(climateSensor.getRelativeHumidity());
+ Serial.println(0.75*climateSensor.getPressure());
+ delay(1000);
 }
 }
