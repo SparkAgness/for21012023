@@ -1,14 +1,25 @@
+#include <forcedClimate.h>
+#include <microDS3231.h>
+#include <RGBmatrixPanel.h>
+
 #define increm_pin 7
 #define decrem_pin 5
 #define anti_bounce_switch_helper 1000
 #define anti_bounce 500
-#define switch_num_max 7
+#define switch_num_max 8
 
-#include <microDS3231.h>
-#include <forcedClimate.h>
+#define CLK 11 // these 7 defines are for RGB-matrix 32x64
+#define OE 9
+#define LAT 10
+#define A A0
+#define B A1
+#define C A2
+#define D A3
 
 MicroDS3231 rtc;
 ForcedClimate climateSensor = ForcedClimate();
+
+RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, true, 64); //declare object for matrix, twice-buffer on(true)
 
 uint8_t menu_switcher(); //declaration of func (see below)
 
@@ -93,47 +104,106 @@ uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) {
 }
 
 void setuper() {
-  uint16_t *clck;
-  clck = &clock;  
     switch (m_switcher) {
         case 1: 
             clock = minute; //here & below 1st string is for comfortable setting clock variables
             minute = switcher(&clock, &switch_help);
-            if (!decrem && minute == 0) {
-              minute = 59;
-              }
-            if (!increm && minute == 59) {
-              minute = 0;
+            if (!decrem && minute == 0) { //here & bellow if var switches down and draws to 0
+                minute = 59;              //means top a head
             }
-                                
+	    if (!increm && minute == 59) { //here & bellow if var switches up and top a head
+                minute = 0;                //draws to zero
+            }
             break;
         case 2:
             clock = hour;
             hour = switcher(&clock, &switch_help);
+	    if (!decrem && hour == 0) {
+                hour = 12;
+            }
+	    if (!increm && hour == 12) {
+                hour = 0;
+            }
             break;
         case 3:
             clock = week_day;
             week_day = switcher(&clock, &switch_help);
+	    if (!decrem && week_day == 1) {
+                week_day = 7;
+            }
+	    if (!increm && week_day == 7) {
+	        week_day = 1;
+            }
             break;
         case 4:
             clock = day;
             day = switcher(&clock, &switch_help);
+	    if (!decrem && day == 1) {
+                day = 31;
+            }
+	    if (!increm && day == 31) {
+                day = 1;
+            }
             break;
         case 5:
             clock = month;
             month = switcher(&clock, &switch_help);
+	    if (!decrem && month == 1) {
+                month = 12;
+            }
+	    if (!increm && month == 12) {
+                month = 1;
+            }
             break;
         case 6:
-            rtc.setTime(sec, minute, hour, day, month, year); 
+            clock = year;
+	    year = switcher(&clock, &switch_help);
+	    break;
+        case 7:
+            rtc.setTime(sec, minute, hour, day, month, year); //implict type conversation maybe
 	    break;
     }
 }
+
+void input_with_first_zero(uint8_t a, uint8_t b, uint8_t c, uint8_t time) {
+    if (time <= 9) {
+        matrix.setCursor(a, b);
+        matrix.print("0");
+	      matrix.setCursor(a = c + a + 2, b);
+        matrix.print(time);
+    }
+    else {
+        matrix.setCursor(a, b);
+        matrix.print(time);
+    }
+}
+
+void matrix_print_time() {
+    uint8_t indentX, indentY, letter_width;
+    indentX = 5;
+    indentY = 1;
+    letter_width = 10;
+    matrix.fillScreen(0);
+    matrix.setTextSize(2); //size of text output
+    matrix.setTextColor(matrix.Color333(7, 3, 0));
+    input_with_first_zero(indentX, indentY, letter_width, hour);
+    indentX = 2*letter_width + 6;
+    matrix.setCursor(indentX, indentY);
+    matrix.setTextColor(matrix.Color333(7, 3, 0));
+    matrix.print(":");
+    indentX += 9;
+    input_with_first_zero(indentX, indentY, letter_width, minute);
+    matrix.swapBuffers(false); //got out data from buffer(end of matrix_print()
+}
+
 
 void setup() {
 Serial.begin(9600);
 pinMode(increm_pin, INPUT_PULLUP);
 pinMode(decrem_pin, INPUT_PULLUP);
 climateSensor.begin();
+matrix.begin(); //RGB-matrix is started
+matrix.setTextWrap(false); //text hyphenation is off
 }
 
 void loop() {
@@ -144,28 +214,15 @@ switch_helper(increm, decrem, &switch_help);
 menu_switcher(&m_switcher, &switch_help);
 setuper();
     if (m_switcher) {
-	Serial.println("Attention, please! Setting true time is going...");
     
-    switcher(&clock, &switch_help);
-    Serial.print(m_switcher);
-    Serial.print(" clock: ");
-    Serial.println(clock);
-    Serial.print(" The minutes is: ");
-    Serial.println(minute);
-    Serial.print(" The hours is: ");
-    Serial.println(hour);
-    Serial.print(" The date is: ");
-    Serial.println(day);
-    Serial.print(" The month is: ");
-    Serial.println(month);    
+	Serial.println("Attention, please! Setting true time is going...");
+        switcher(&clock, &switch_help);
     }
-if (!m_switcher) {
-Serial.println(rtc.getTimeString());
-Serial.println(rtc.getDateString());
-clock_var_val();
-Serial.println(climateSensor.getTemperatureCelcius());
-Serial.println(climateSensor.getRelativeHumidity());
- Serial.println(0.75*climateSensor.getPressure());
- delay(1000);
-}
+    if (!m_switcher) {
+        clock_var_val();
+        Serial.println(climateSensor.getTemperatureCelcius());
+        Serial.println(climateSensor.getRelativeHumidity());
+        Serial.println(0.75*climateSensor.getPressure());
+        matrix_print_time();
+    }
 }
