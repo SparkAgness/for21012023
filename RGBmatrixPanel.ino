@@ -30,17 +30,24 @@ void matrix_print_time() {
     matrix.swapBuffers(true); //got out data from buffer(end of matrix_print()
 }
 
-void matrix_print_date() {
+void matrix_print_date() {    
     uint8_t indentX, indentY, letter_width;
+    indentX = 6;
+    indentY = 22;    
+    letter_width = 4;
+    matrix.setTextSize(1);    
+    matrix.setCursor(indentX, indentY);
+    input_with_first_zero(indentX, indentY, letter_width, day);
+    indentX = 2*letter_width + 14;
+    matrix.setCursor(indentX, indentY);    
+    print_month_name(month); //insert month_name();
+    indentX += 20;
+    matrix.setCursor(indentX, indentY);
+    print_year(year);
     indentX = 5;
-    indentY = 16;
-    matrix.setTextSize(1);
-    matrix.setTextColor(matrix.Color333(0, 0, 255));
-	matrix.setCursor(a, b);
-    matrix.print(date);
-
-    matrix.swapBuffers(false);
-}
+    indentY = 24;
+    matrix.setCursor(indentX, indentY);  
+    //print_week_day(week_day); if want, may to unlock
 
 void print_week_day(uint8_t week_day) {
     switch(week_day) {
@@ -68,17 +75,82 @@ void print_week_day(uint8_t week_day) {
      }
 }
 
-void matrix_print_clock_setup() {
+void matrix_print_clock_setup(uint8_t m_switcher) {
+    uint8_t indentX, indentY, letter_width;
+    matrix.fillScreen(0);	        
+    switch(m_switcher) {
+        case 1: //set minutes	        
+            matrix.fillScreen(0);
+            matrix.setTextSize(2);
+            letter_width = 10;
+            indentX = 2*letter_width + 6;
+            indentY = 3;       
+            matrix.setCursor(indentX, indentY);    
+            matrix.print(":");
+            indentX += 9;                      
+            input_with_first_zero(indentX, indentY, letter_width, minute);          
+            matrix.swapBuffers(false);
+            break;
+	case 2: //set hours
+            matrix.fillScreen(0);
+            indentX = 5;
+            indentY = 3;
+            letter_width = 10;
+            matrix.fillScreen(0);
+            matrix.setTextSize(2); //size of text output    
+            input_with_first_zero(indentX, indentY, letter_width, hour);
+            matrix.swapBuffers(false);            
+            break;
+        case 3: //set week-day
+            matrix.fillScreen(0);
+            indentX = 5;
+            indentY = 24;
+            matrix.setTextSize(1);
+            matrix.setCursor(indentX, indentY);  
+            print_week_day(week_day);
+            matrix.swapBuffers(false); 
+            break;
+	case 4: //set date-day
+            matrix.fillScreen(0);
+            indentX = 6;
+            indentY = 22;    
+            letter_width = 4;
+            matrix.setTextSize(1);    
+            matrix.setCursor(indentX, indentY);
+            input_with_first_zero(indentX, indentY, letter_width, day);
+            matrix.swapBuffers(false);  
+            break;
+        case 5: //set month
+            matrix.fillScreen(0);
+            letter_width = 4;
+	    indentX = 2*letter_width + 14;
+            indentY = 22;
+            matrix.setTextSize(1);    
+            matrix.setCursor(indentX, indentY);
+            print_month_name(month);
+            matrix.swapBuffers(false);
+            break;
+       case 6: //set year
+            matrix.fillScreen(0);
+            letter_width = 4;
+	    indentX = 2*letter_width + 34;
+            indentY = 22;
+	    matrix.setTextSize(1);
+            matrix.setCursor(indentX, indentY);
+            print_year(year);
+            matrix.swapBuffers(false);
+            break;
+        }
 
 }
 
 void matrix_color_switcher() {
     if (hour <= 7 || hour >= 21) {
         matrix.setTextColor(matrix.Color333(0, 0, 7));
-	}
-	if (hour > 7 && hour < 21) {
-		matrix.setTextColor(matrix.Color333(7, 3, 0));
-	}
+    }
+    if (hour > 7 && hour < 21) {
+        matrix.setTextColor(matrix.Color333(7, 3, 0));
+    }
 }
 
 void month_name(uint8_t month) {
