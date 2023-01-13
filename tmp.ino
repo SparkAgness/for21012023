@@ -32,6 +32,8 @@ uint8_t sec, minute, hour, week_day, day, month;
 uint16_t year;
 uint8_t m_switcher;
 enum {dur_clim_display = 2000, dur_clock_display = 4000}; //durations of matrix_print_climate() and matrix_print_clock()
+enum {nothing = 0, minutes, hours, week_days, days, months, clocks, alarm_minutes, alarm_hours, alarm_flags, setups, ends} setvalue;
+//to try paste instead m_switcher
 
 struct val_flag {    //will be used with switch_helper 
     uint8_t val;     //will return value of increm/decrem/menu_switcher mode
@@ -480,6 +482,21 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
 break;            
     }
 
+}
+
+void alarm_tone() {	//sets the ringtone for alarm
+    uint8_t pause_time = 50;
+    uint8_t ring_freq = 25;
+    uint32_t ring_timer;
+    static uint32_t pause_timer = millis(); 	
+    if (millis() - pause_timer > pause_time) {
+        ring_timer = millis();        
+        while (millis() - ring_timer <= ring_freq) {
+            digitalWrite(alarm_pin, HIGH);
+        }
+        digitalWrite(alarm_pin, 0);
+        pause_timer = millis();
+    }
 }
 
 void setup() {
