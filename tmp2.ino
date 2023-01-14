@@ -24,16 +24,17 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, true, 64); //declare object for 
 
 uint8_t menu_switcher(); //declaration of func (see below)
 
-bool increm, decrem, cc_flag;
+bool increm, decrem, cc_flag, alarm_flag;
 uint16_t clock;
 uint32_t time_enter; //always will be in global-value!!!
 uint32_t timer, timer2;
-uint8_t sec, minute, hour, week_day, day, month;
+uint8_t sec, minute, hour, week_day, day, month, alarm_minute, alarm_hour;
 uint16_t year;
-uint8_t m_switcher;
+//uint8_t m_switcher; //now it's enuberable type
+
 enum {dur_clim_display = 2000, dur_clock_display = 4000}; //durations of matrix_print_climate() and matrix_print_clock()
-enum {nothing = 0, minutes, hours, week_days, days, months, years, alarm_minutes, alarm_hours, alarm_flags, setups, ends} setvalue;
-//to try paste instead m_switcher
+enum {nothing = 0, minutes, hours, week_days, days, months, years, alarm_minutes, alarm_hours, alarm_flags, setups, ends} m_switcher;
+//to try paste inkstead m_switcher
 
 struct val_flag {    //will be used with switch_helper 
     uint8_t val;     //will return value of increm/decrem/menu_switcher mode
@@ -97,16 +98,32 @@ uint8_t menu_switcher(uint8_t *m_switcher, struct val_flag *pSwitch_help) {
     if (pSwitch_help->val == 3 && pSwitch_help->flag == 0) {
         *m_switcher += 1;
         pSwitch_help->val = 0; // so that *m_switcher++ will be once
-        if (*m_switcher == switch_num_max) {
-            *m_switcher = 0;
+        if (*m_switcher == ends) {
+            *m_switcher = nothing;
 	}
     }
     return *m_switcher;
 }
 
+bool bool_switcher(bool flag, struct val_flag *pSwitch_help) {
+    struct flags {
+    bool inc = 0;
+    bool dec = 0;
+    } inc_dec;
+    if (pSwitch_help->val == 2 && pSwitch_help->flag == 0) {
+        inc_dec.dec = 1;     
+    }
+    if (pSwitch_help->val == 1 && pSwitch_help->flag == 0) {
+        inc_dec.inc = 1;
+    }
+    if (inc_dec.dec || inc_dec.dec) {
+        flag = !flag;
+    }
+    return flag;
+}
 
 uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) { 
-  struct flags { // the structure is for comfortable work with flags and values of switch_help struct 
+    struct flags { // the structure is for comfortable work with flags and values of switch_help struct 
     bool inc = 0;
     bool dec = 0;
   } inc_dec;
@@ -133,7 +150,7 @@ uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) {
 
 void setuper() {    
     switch (m_switcher) {
-        case 1: 
+        case minutes: 
             clock = minute; //here & below 1st string is for comfortable setting clock variables
             minute = switcher(&clock, &switch_help);
             if (minute == 255 && decrem) { //here & bellow if var switches down and draws to 0
@@ -143,7 +160,7 @@ void setuper() {
                 minute = 0;                //draws to zero
             }
             break;
-        case 2:
+        case hours:
             clock = hour;
             hour = switcher(&clock, &switch_help);
 	    if (hour == 24 && increm) {
@@ -153,7 +170,7 @@ void setuper() {
                 hour = 23;
             }
             break;
-        case 3:
+        case week_days:
             clock = week_day;
             week_day = switcher(&clock, &switch_help);
 	    if (week_day == 0 && decrem) {
@@ -163,7 +180,7 @@ void setuper() {
 	        week_day = 1;
             }
             break;
-        case 4:
+        case days:
             clock = day;
             day = switcher(&clock, &switch_help);
 	    if (day == 0 && decrem) {
@@ -173,7 +190,7 @@ void setuper() {
                 day = 1;
             }
             break;
-        case 5:
+        case months:
             clock = month;
             month = switcher(&clock, &switch_help);
 	    if (month == 0 && decrem) {
@@ -183,7 +200,7 @@ void setuper() {
                 month = 1;
             }
             break;
-        case 6:
+        case years:
             clock = year;
             if (year == 2022 && decrem) {
               year = 2033;      
@@ -193,7 +210,30 @@ void setuper() {
             }
 	    year = switcher(&clock, &switch_help);
 	    break;
-        case 7:
+        case alarm_minutes:
+             clock = alarm_minute; //here & below 1st string is for comfortable setting clock variables
+            alarm_minute = switcher(&clock, &switch_help);
+            if (alarm_minute == 255 && decrem) { //here & bellow if var switches down and draws to 0
+                alarm_minute = 59;              //means top a head
+            }
+	          if (alarm_minute == 60 && increm) { //here & bellow if var switches up and top a head
+                alarm_minute = 0;                //draws to zero
+            }
+            break;
+        case alarm_hours:
+            clock = alarm_hour;
+            alarm_hour = switcher(&clock, &switch_help);
+	    if (alarm_hour == 24 && increm) {
+                alarm_hour = 0;
+            }
+	    if (alarm_hour == 255 && decrem) {
+                hour = 23;
+            }
+            break;
+        case alarm_flags:
+	    alarm_flag = bool_switch(alarm_flag); //may be not working!!!
+            break;
+        case setups:
             rtc.setTime(sec, minute, hour, day, month, year); //implict type conversation maybe
 	    break;
     }
