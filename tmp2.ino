@@ -8,6 +8,7 @@
 #define clock_clim 1000
 #define anti_bounce 500
 #define switch_num_max 8
+//#define day_week_on 1 //define if you want to see label of week_day on display
 
 #define CLK 11 // these 7 defines are for RGB-matrix 32x64
 #define OE 9
@@ -33,7 +34,7 @@ uint16_t year;
 //uint8_t m_switcher; //now it's enuberable type
 
 enum {dur_clim_display = 2000, dur_clock_display = 4000}; //durations of matrix_print_climate() and matrix_print_clock()
-enum {nothing = 0, minutes, hours, week_days, days, months, years, alarm_minutes, alarm_hours, alarm_flags, setups, ends} m_switcher;
+enum num{nothing = 0, minutes, hours, week_days, days, months, years, alarm_minutes, alarm_hours, alarm_flags, setups, ends} m_switcher;
 //to try paste inkstead m_switcher
 
 struct val_flag {    //will be used with switch_helper 
@@ -67,7 +68,7 @@ void clock_var_val() {
 }
 
 struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch_help) {
-//helps to avoid effect of changing clock's values during menu_switcher() using
+  //helps to avoid effect of changing clock's values during menu_switcher() using
     
     if (!increm && decrem && millis() - time_enter > anti_bounce) {
         pSwitch_help->val = 1;
@@ -92,11 +93,11 @@ struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch
     return *pSwitch_help;
 }
 
-uint8_t menu_switcher(uint8_t *m_switcher, struct val_flag *pSwitch_help) { 
+enum num menu_switcher(num *m_switcher, struct val_flag *pSwitch_help) { 
 //switches to setup clock menu
     
     if (pSwitch_help->val == 3 && pSwitch_help->flag == 0) {
-        *m_switcher += 1;
+        *m_switcher++;
         pSwitch_help->val = 0; // so that *m_switcher++ will be once
         if (*m_switcher == ends) {
             *m_switcher = nothing;
@@ -231,7 +232,7 @@ void setuper() {
             }
             break;
         case alarm_flags:
-	    alarm_flag = bool_switch(alarm_flag); //may be not working!!!
+	    alarm_flag = bool_switcher(alarm_flag, &switch_help); //may be not working!!!
             break;
         case setups:
             rtc.setTime(sec, minute, hour, day, month, year); //implict type conversation maybe
@@ -360,6 +361,73 @@ void print_week_day(uint8_t week_day) {
      }
 }
 
+void show_week_day() {
+    uint8_t indentX, indentY, radius, between;
+    indentX = 3;
+    indentY = 29;
+    radius = 2;
+    between = 9;
+    switch(week_day) {  
+        case 7: 
+            indentX = between*6 + 3;           
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0));
+        case 6:
+            indentX = between*5 + 3;
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0));  
+        case 5:
+            indentX = between*4 + 3;   
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0));
+        case 4:
+            indentX = between*3 + 3;
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0));  
+        case 3:
+            indentX = between*2 + 3;
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0)); 
+        case 2:
+            indentX = 3 + between;
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0));      
+        case 1:
+            indentX = 3;
+            if (hour <= 7 || hour >= 21)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(0, 0, 1));
+            if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 3, 0));
+            if (hour >= 12 && hour <= 17)
+              matrix.fillCircle(indentX, indentY, radius, matrix.Color333(7, 0, 0)); 
+            
+    }
+}
+
 void matrix_color_switcher() {
     if (hour <= 7 || hour >= 21) {
         matrix.setTextColor(matrix.Color333(0, 0, 1));
@@ -393,7 +461,7 @@ void matrix_print_clock() {
 void matrix_print_date() {    
     uint8_t indentX, indentY, letter_width;
     indentX = 6;
-    indentY = 22;    
+    indentY = 19;    
     letter_width = 4;
     matrix.setTextSize(1);    
 	  matrix.setCursor(indentX, indentY);
@@ -406,8 +474,8 @@ void matrix_print_date() {
     print_year(year);
     indentX = 5;
     indentY = 24;
-    matrix.setCursor(indentX, indentY);  
-    //print_week_day(week_day); if want, may to unlock
+    //matrix.setCursor(indentX, indentY);  
+    show_week_day(); //if want, may to unlock
 
 }
 
@@ -459,7 +527,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
     uint8_t indentX, indentY, letter_width;
     matrix.fillScreen(0);	        
     switch(m_switcher) {
-    case 1: //set minutes	    
+    case minutes: //set minutes	    
           matrix.fillScreen(0);    
           matrix.setTextSize(2);
           letter_width = 10;
@@ -471,7 +539,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
           input_with_first_zero(indentX, indentY, letter_width, minute);          
           matrix.swapBuffers(false);
 	    break;
-	case 2: //set hours
+	case hours: //set hours
             indentX = 5;
             indentY = 3;
             letter_width = 10;
@@ -480,7 +548,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             input_with_first_zero(indentX, indentY, letter_width, hour);
             matrix.swapBuffers(false);            
 	    break;
-  case 3: //set week-day
+  case week_days: //set week-day
       indentX = 5;
       indentY = 24;
       matrix.fillScreen(0);
@@ -489,7 +557,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
       print_week_day(week_day);
       matrix.swapBuffers(false); 
       break;
-  case 4: //set date-day
+  case days: //set date-day
       matrix.fillScreen(0);
 	    uint8_t indentX, indentY, letter_width;
             indentX = 6;
@@ -500,7 +568,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             input_with_first_zero(indentX, indentY, letter_width, day);
             matrix.swapBuffers(false);
             break;             
-  case 5: //set month
+  case months: //set month
             matrix.fillScreen(0);
             letter_width = 4;
 	          indentX = 2*letter_width + 14;
@@ -510,16 +578,31 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             print_month_name(month);
             matrix.swapBuffers(false);
             break;
-  case 6: //set year
+  case years: //set year
             matrix.fillScreen(0);
             letter_width = 4;
-	    indentX = 2*letter_width + 34;
-      indentY = 22;
-	    matrix.setTextSize(1);
+	          indentX = 2*letter_width + 34;
+            indentY = 22;
+	          matrix.setTextSize(1);
             matrix.setCursor(indentX, indentY);
             print_year(year);
             matrix.swapBuffers(false);
-break;            
+            break;      
+  case alarm_minutes:
+            break;
+  case alarm_hours:
+            break;
+  case alarm_flags:
+            break;
+  case setups:
+  indentX = 5;
+            indentY = 3;
+            letter_width = 10;
+            matrix.fillScreen(0);
+            matrix.setTextSize(2); //size of text output    
+            matrix.print("SETS");
+            matrix.swapBuffers(false);   
+            break;
     }
 
 }
