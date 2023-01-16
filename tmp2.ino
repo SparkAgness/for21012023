@@ -7,8 +7,7 @@
 #define decrem_pin 5
 #define clock_clim 1000
 #define anti_bounce 500
-#define switch_num_max 8
-//#define day_week_on 1 //define if you want to see label of week_day on display
+#define switch_num_max 11
 
 #define CLK 11 // these 7 defines are for RGB-matrix 32x64
 #define OE 9
@@ -29,13 +28,11 @@ bool increm, decrem, cc_flag, alarm_flag;
 uint16_t clock;
 uint32_t time_enter; //always will be in global-value!!!
 uint32_t timer, timer2;
-uint8_t sec, minute, hour, week_day, day, month, alarm_minute, alarm_hour;
+uint8_t sec, minute, hour, week_day, day, month; // for setting clock
+uint8_t alarm_minute, alarm_hour; //for setting alarm
 uint16_t year;
-//uint8_t m_switcher; //now it's enuberable type
-
+uint8_t m_switcher;
 enum {dur_clim_display = 2000, dur_clock_display = 4000}; //durations of matrix_print_climate() and matrix_print_clock()
-enum num{nothing = 0, minutes, hours, week_days, days, months, years, alarm_minutes, alarm_hours, alarm_flags, setups, ends} m_switcher;
-//to try paste inkstead m_switcher
 
 struct val_flag {    //will be used with switch_helper 
     uint8_t val;     //will return value of increm/decrem/menu_switcher mode
@@ -43,19 +40,6 @@ struct val_flag {    //will be used with switch_helper
 } switch_help;
 
 struct val_flag *pSwitch_help = &switch_help;
-
-void clim_clock(bool increm, bool decrem) {  //don't work as it need's
-    if(increm && decrem) {
-    if (millis() - timer > dur_clock_display) {
-      timer2 = millis();
-      while(millis() - timer2 < dur_clim_display) {
-        matrix_print_climate();        
-      }
-      matrix_print_clock();
-      timer = millis();
-    }
-  }
-}
 
 void clock_var_val() {
     sec = rtc.getSeconds();
@@ -68,7 +52,7 @@ void clock_var_val() {
 }
 
 struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch_help) {
-  //helps to avoid effect of changing clock's values during menu_switcher() using
+//helps to avoid effect of changing clock's values during menu_switcher() using
     
     if (!increm && decrem && millis() - time_enter > anti_bounce) {
         pSwitch_help->val = 1;
@@ -93,38 +77,22 @@ struct val_flag switch_helper(bool increm, bool decrem, struct val_flag *pSwitch
     return *pSwitch_help;
 }
 
-enum num menu_switcher(num *m_switcher, struct val_flag *pSwitch_help) { 
+uint8_t menu_switcher(uint8_t *m_switcher, struct val_flag *pSwitch_help) { 
 //switches to setup clock menu
     
     if (pSwitch_help->val == 3 && pSwitch_help->flag == 0) {
-        *m_switcher++;
+        *m_switcher += 1;
         pSwitch_help->val = 0; // so that *m_switcher++ will be once
-        if (*m_switcher == ends) {
-            *m_switcher = nothing;
+        if (*m_switcher == switch_num_max) {
+            *m_switcher = 0;
 	}
     }
     return *m_switcher;
 }
 
-bool bool_switcher(bool flag, struct val_flag *pSwitch_help) {
-    struct flags {
-    bool inc = 0;
-    bool dec = 0;
-    } inc_dec;
-    if (pSwitch_help->val == 2 && pSwitch_help->flag == 0) {
-        inc_dec.dec = 1;     
-    }
-    if (pSwitch_help->val == 1 && pSwitch_help->flag == 0) {
-        inc_dec.inc = 1;
-    }
-    if (inc_dec.dec || inc_dec.dec) {
-        flag = !flag;
-    }
-    return flag;
-}
 
 uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) { 
-    struct flags { // the structure is for comfortable work with flags and values of switch_help struct 
+  struct flags { // the structure is for comfortable work with flags and values of switch_help struct 
     bool inc = 0;
     bool dec = 0;
   } inc_dec;
@@ -149,9 +117,30 @@ uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) {
     return *clck;
 }
 
+bool bool_switcher(bool flag, struct val_flag *pSwitch_help) { //for flags switch - alarm_flag
+    struct flags {
+    bool inc = 0;
+    bool dec = 0;
+    } inc_dec;
+    if (pSwitch_help->val == 2 && pSwitch_help->flag == 0) {
+        inc_dec.dec = 1;     
+    }
+    if (pSwitch_help->val == 1 && pSwitch_help->flag == 0) {
+        inc_dec.inc = 1;
+        pSwitch_help->val = 0; //so that clock++ will be once
+
+    }
+    if (inc_dec.dec || inc_dec.inc) {
+        flag = !flag;
+        pSwitch_help->val = 0; //so that clock++ will be once
+
+    }
+    return flag;
+}
+
 void setuper() {    
     switch (m_switcher) {
-        case minutes: 
+        case 1: //set minutes
             clock = minute; //here & below 1st string is for comfortable setting clock variables
             minute = switcher(&clock, &switch_help);
             if (minute == 255 && decrem) { //here & bellow if var switches down and draws to 0
@@ -161,47 +150,47 @@ void setuper() {
                 minute = 0;                //draws to zero
             }
             break;
-        case hours:
+        case 2: //set hours
             clock = hour;
             hour = switcher(&clock, &switch_help);
-	    if (hour == 24 && increm) {
+	          if (hour == 24 && increm) {
                 hour = 0;
             }
-	    if (hour == 255 && decrem) {
+	          if (hour == 255 && decrem) {
                 hour = 23;
             }
             break;
-        case week_days:
+        case 3: //set week_days
             clock = week_day;
             week_day = switcher(&clock, &switch_help);
-	    if (week_day == 0 && decrem) {
+	          if (week_day == 0 && decrem) {
                 week_day = 7;
             }
-	    if (week_day == 8 && increm) {
-	        week_day = 1;
+	          if (week_day == 8 && increm) {
+	          week_day = 1;
             }
             break;
-        case days:
+        case 4: //set date's days
             clock = day;
             day = switcher(&clock, &switch_help);
-	    if (day == 0 && decrem) {
+	          if (day == 0 && decrem) {
                 day = 31;
             }
-	    if (day == 32 && increm) {
+	          if (day == 32 && increm) {
                 day = 1;
             }
             break;
-        case months:
+        case 5: //set date's months
             clock = month;
             month = switcher(&clock, &switch_help);
-	    if (month == 0 && decrem) {
+	          if (month == 0 && decrem) {
                 month = 12;
             }
-	    if (month == 13 && increm) {
+	          if (month == 13 && increm) {
                 month = 1;
             }
             break;
-        case years:
+        case 6: //set date's year
             clock = year;
             if (year == 2022 && decrem) {
               year = 2033;      
@@ -209,10 +198,10 @@ void setuper() {
             if (year == 2034 && increm) {
               year = 2023;
             }
-	    year = switcher(&clock, &switch_help);
-	    break;
-        case alarm_minutes:
-             clock = alarm_minute; //here & below 1st string is for comfortable setting clock variables
+	          year = switcher(&clock, &switch_help);
+	          break;
+        case 7: //set alarm_minutes
+            clock = alarm_minute;
             alarm_minute = switcher(&clock, &switch_help);
             if (alarm_minute == 255 && decrem) { //here & bellow if var switches down and draws to 0
                 alarm_minute = 59;              //means top a head
@@ -221,22 +210,22 @@ void setuper() {
                 alarm_minute = 0;                //draws to zero
             }
             break;
-        case alarm_hours:
+        case 8: //set alarm_hours
             clock = alarm_hour;
             alarm_hour = switcher(&clock, &switch_help);
-	    if (alarm_hour == 24 && increm) {
+	          if (alarm_hour == 24 && increm) {
                 alarm_hour = 0;
             }
-	    if (alarm_hour == 255 && decrem) {
-                hour = 23;
+	          if (alarm_hour == 255 && decrem) {
+                alarm_hour = 23;
             }
             break;
-        case alarm_flags:
-	    alarm_flag = bool_switcher(alarm_flag, &switch_help); //may be not working!!!
+        case 9: //set alarm_flag
+            alarm_flag = bool_switcher(alarm_flag, &switch_help);
             break;
-        case setups:
+        case 10: //settings are sets
             rtc.setTime(sec, minute, hour, day, month, year); //implict type conversation maybe
-	    break;
+	          break;
     }
 }
 
@@ -474,8 +463,9 @@ void matrix_print_date() {
     print_year(year);
     indentX = 5;
     indentY = 24;
-    //matrix.setCursor(indentX, indentY);  
-    show_week_day(); //if want, may to unlock
+    matrix.setCursor(indentX, indentY);
+    show_week_day();  
+    //print_week_day(week_day); if want, may to unlock
 
 }
 
@@ -527,19 +517,19 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
     uint8_t indentX, indentY, letter_width;
     matrix.fillScreen(0);	        
     switch(m_switcher) {
-    case minutes: //set minutes	    
+    case 1: //set minutes	    
           matrix.fillScreen(0);    
           matrix.setTextSize(2);
           letter_width = 10;
           indentX = 2*letter_width + 6;
-	        indentY = 3;       
+          indentY = 3;       
           matrix.setCursor(indentX, indentY);    
           matrix.print(":");
           indentX += 9;                      
           input_with_first_zero(indentX, indentY, letter_width, minute);          
           matrix.swapBuffers(false);
-	    break;
-	case hours: //set hours
+          break;
+	  case 2: //set hours
             indentX = 5;
             indentY = 3;
             letter_width = 10;
@@ -548,7 +538,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             input_with_first_zero(indentX, indentY, letter_width, hour);
             matrix.swapBuffers(false);            
 	    break;
-  case week_days: //set week-day
+    case 3: //set week-day
       indentX = 5;
       indentY = 24;
       matrix.fillScreen(0);
@@ -557,7 +547,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
       print_week_day(week_day);
       matrix.swapBuffers(false); 
       break;
-  case days: //set date-day
+    case 4: //set date-day
       matrix.fillScreen(0);
 	    uint8_t indentX, indentY, letter_width;
             indentX = 6;
@@ -568,7 +558,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             input_with_first_zero(indentX, indentY, letter_width, day);
             matrix.swapBuffers(false);
             break;             
-  case months: //set month
+    case 5: //set month
             matrix.fillScreen(0);
             letter_width = 4;
 	          indentX = 2*letter_width + 14;
@@ -578,7 +568,7 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             print_month_name(month);
             matrix.swapBuffers(false);
             break;
-  case years: //set year
+    case 6: //set year
             matrix.fillScreen(0);
             letter_width = 4;
 	          indentX = 2*letter_width + 34;
@@ -587,27 +577,68 @@ void matrix_print_clock_setup(uint8_t m_switcher) {
             matrix.setCursor(indentX, indentY);
             print_year(year);
             matrix.swapBuffers(false);
-            break;      
-  case alarm_minutes:
             break;
-  case alarm_hours:
-            break;
-  case alarm_flags:
-            break;
-  case setups:
-  indentX = 5;
+    case 7: //set alarm_minutes
+            matrix.fillScreen(0);    
+            matrix.setTextSize(2);
+            letter_width = 10;
+            indentX = 2*letter_width + 6;
+            indentY = 3;       
+            matrix.setCursor(indentX, indentY);    
+            matrix.print(":");
+            indentX += 9;                      
+            input_with_first_zero(indentX, indentY, letter_width, alarm_minute);          
+            indentX = 6;
+	    indentY = 22;
+	    matrix.setTextSize(1);
+            matrix.setCursor(indentX, indentY);
+            matrix.print("alarm");
+            matrix.swapBuffers(false);
+	    break;
+    case 8: //set alarm_hours
+            indentX = 5;
             indentY = 3;
             letter_width = 10;
             matrix.fillScreen(0);
             matrix.setTextSize(2); //size of text output    
-            matrix.print("SETS");
-            matrix.swapBuffers(false);   
+            input_with_first_zero(indentX, indentY, letter_width, alarm_hour);
+            indentX = 6;
+	    indentY = 22;
+	    matrix.setTextSize(1);
+            matrix.setCursor(indentX, indentY);
+            matrix.print("alarm");
+            matrix.swapBuffers(false);
             break;
+    case 9: //set alarm_flag
+	    if (alarm_flag) {
+            indentX = 6;
+	        indentY = 22;
+	        matrix.setTextSize(1);
+            matrix.setCursor(indentX, indentY);
+            matrix.print("alarm on");
+            matrix.swapBuffers(false);
+            }
+	    else {
+            indentX = 6;
+	        indentY = 22;
+	        matrix.setTextSize(1);
+            matrix.setCursor(indentX, indentY);
+            matrix.print("alarm off");
+            matrix.swapBuffers(false);
+            }
+            break;
+    case 10: //settings are available
+	    indentX = 6;
+	    indentY = 22;
+	    matrix.setTextSize(1);
+        matrix.setCursor(indentX, indentY);
+        matrix.print("SETTING");
+        matrix.swapBuffers(false);
+        break;            
     }
-
 }
 
-void alarm_tone() {	//sets the ringtone for alarm
+void alarm_tone() {	
     uint8_t pause_time = 50;
     uint8_t ring_freq = 25;
     uint32_t ring_timer;
@@ -620,6 +651,41 @@ void alarm_tone() {	//sets the ringtone for alarm
         digitalWrite(alarm_pin, 0);
         pause_timer = millis();
     }
+
+}
+
+void alarm() { //don't work, hang
+  bool start = 0;
+  uint16_t tim;
+  if (alarm_hour == hour && alarm_minute == minute && alarm_flag) {
+    start = true;         
+    if (!decrem || !increm) {
+        start = false;
+        tim = millis();
+     }   
+    if (start) {
+      alarm_tone();      
+      }
+    if (!start) {      
+      while (millis - tim < 60000) {
+        clim_clock(increm, decrem);      
+    }
+  }     
+ }
+}
+
+
+void clim_clock(bool increm, bool decrem) {  //don't work as it need's
+    if(increm && decrem) {
+    if (millis() - timer > dur_clock_display) {
+      timer2 = millis();
+      while(millis() - timer2 < dur_clim_display) {
+        matrix_print_climate();        
+      }
+      matrix_print_clock();
+      timer = millis();
+    }
+  }
 }
 
 void setup() {
@@ -639,6 +705,7 @@ decrem = digitalRead(decrem_pin);
  
 switch_helper(increm, decrem, &switch_help);
 menu_switcher(&m_switcher, &switch_help);
+
 setuper();
   if (m_switcher) {    
 	    switcher(&clock, &switch_help);            
@@ -657,6 +724,7 @@ setuper();
         //matrix_print_climate();
         //matrix_print_clock();
         
+        alarm();
         clim_clock(increm, decrem);
         
     }
