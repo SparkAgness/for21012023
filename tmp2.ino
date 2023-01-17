@@ -90,6 +90,21 @@ uint8_t menu_switcher(uint8_t *m_switcher, struct val_flag *pSwitch_help) {
     return *m_switcher;
 }
 
+void print_alarm_status(bool flag) {
+  uint8_t indentX, indentY, rect_hight, rect_width;
+  indentX = 1;
+  indentY = 1;
+  rect_hight = 3;
+  rect_width = 3;
+  if (flag) {
+    if (hour <= 7 || hour >= 21)
+      matrix.fillRect(indentX, indentY, rect_hight, rect_width, matrix.Color333(0, 0, 1));
+    if ((hour > 7 && hour < 12) || (hour > 17 && hour < 21))   
+      matrix.fillRect(indentX, indentY, rect_hight, rect_width, matrix.Color333(7, 3, 0));
+    if (hour >= 12 && hour <= 17)
+      matrix.fillRect(indentX, indentY, rect_hight, rect_width, matrix.Color333(7, 0, 0));
+  }
+}
 
 uint16_t switcher(uint16_t *clck, struct val_flag *pSwitch_help) { 
   struct flags { // the structure is for comfortable work with flags and values of switch_help struct 
@@ -443,6 +458,7 @@ void matrix_print_clock() {
     indentX += 9;
     input_with_first_zero(indentX, indentY, letter_width, minute);    
     matrix_print_date();
+    print_alarm_status(alarm_flag);
     
     matrix.swapBuffers(false); //got out data from buffer(end of matrix_print()
 }
@@ -658,18 +674,16 @@ void alarm() { //don't work, hang
   bool start = 0;
   uint16_t tim;
   if (alarm_hour == hour && alarm_minute == minute && alarm_flag) {
-    start = true;         
-    if (!decrem || !increm) {
-        start = false;
-        tim = millis();
+    start = true;   
+    tim = millis();      
+    if (!decrem || !increm) {        
+        start = false;        
      }   
     if (start) {
       alarm_tone();      
       }
     if (!start) {      
-      while (millis - tim < 60000) {
-        clim_clock(increm, decrem);      
-    }
+      alarm_flag = false;
   }     
  }
 }
