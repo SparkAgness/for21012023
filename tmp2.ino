@@ -244,7 +244,7 @@ void setuper() {
     }
 }
 
-void input_with_first_zero(uint8_t a, uint8_t b, uint8_t c, uint8_t time) {
+void input_with_first_zero(uint8_t a, uint8_t b, uint8_t c, uint8_t time) { //fix up first zero with 1-number digits
     if (time <= 9) {        
         matrix.setCursor(a, b);
         matrix.print("0");
@@ -257,7 +257,7 @@ void input_with_first_zero(uint8_t a, uint8_t b, uint8_t c, uint8_t time) {
     }
 }
 
-void print_month_name(uint8_t month) {
+void print_month_name(uint8_t month) { //shows on LED-display month name
     switch(month) {
         case 1: 
             matrix.print("JAN");
@@ -298,7 +298,7 @@ void print_month_name(uint8_t month) {
     }
 }
 
-void print_year(uint16_t year) {
+void print_year(uint16_t year) {//shows on LED-display year
     switch(year) {
     case 2023:
         matrix.print("'23");
@@ -334,7 +334,7 @@ void print_year(uint16_t year) {
         matrix.print("'33");
         break;
     default:
-        matrix.print(month);
+        matrix.print(year);
         break;
     }
 }
@@ -365,7 +365,7 @@ void print_week_day(uint8_t week_day) {
      }
 }
 
-void show_week_day() {
+void show_week_day() { //shows week-day circles (icons) on LED-display
     uint8_t indentX, indentY, radius, between;
     indentX = 3;
     indentY = 29;
@@ -432,7 +432,7 @@ void show_week_day() {
     }
 }
 
-void matrix_color_switcher() {
+void matrix_color_switcher() { //switches LED-color in appliance with time
     if (hour <= 7 || hour >= 21) {
         matrix.setTextColor(matrix.Color333(0, 0, 1));
 	}
@@ -688,18 +688,28 @@ void alarm() { //don't work, hang
  }
 }
 
-
-void clim_clock(bool increm, bool decrem) {  //don't work as it need's
+void clim_clock(bool increm, bool decrem) {  //"while" interrupts alarm()
     if(increm && decrem) {
     if (millis() - timer > dur_clock_display) {
       timer2 = millis();
-      while(millis() - timer2 < dur_clim_display) {
+      while (millis() - timer2 < dur_clim_display) {
         matrix_print_climate();        
       }
       matrix_print_clock();
       timer = millis();
     }
   }
+}
+
+void clim_clock2 () {  //alternative version without "while" - no interrupts for alarm()
+  if (millis() - timer > dur_clim_display) {
+    matrix_print_clock();    
+    }    
+  if(millis() - timer2 > dur_clock_display) {
+    timer = millis();
+    timer2 = millis();
+    matrix_print_climate();    
+    }
 }
 
 void setup() {
@@ -739,7 +749,7 @@ setuper();
         //matrix_print_clock();
         
         alarm();
-        clim_clock(increm, decrem);
+        clim_clock2();
         
     }
 }
