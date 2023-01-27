@@ -24,8 +24,7 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, true, 64); //declare object for 
 
 uint8_t menu_switcher(); //declaration of func (see below)
 
-bool increm, decrem, cc_flag, alarm_flag;
-bool holiday_flag;
+bool increm, decrem, cc_flag, alarm_flag, stp_flag;
 uint16_t clock;
 uint32_t time_enter; //always will be in global-value!!!
 uint32_t timer, timer2;
@@ -41,6 +40,20 @@ struct val_flag {    //will be used with switch_helper
 } switch_help;
 
 struct val_flag *pSwitch_help = &switch_help;
+
+enum events {WeddingDay, SashaEfremovBD, IlyaEfremovBD, YouryEfremovBD, KravtsovBD, PetrovichBD, BiberinBD, DumanskiBD, ElenaEfremovaBD, NewYear, Christmas, DefDay, VictoryDay, BastiliaDay} holidays; //for holiday_label() switch
+bool holiday_flag;
+
+struct holiday_date {
+    enum events holidays;
+    uint8_t date;
+    uint8_t month;
+};
+
+holiday_date wedding_day, Sasha_Efremov_BD, Ilya_Efremov_BD, Youry_Efremov_BD, Kravtsov_BD, Petrovich_BD, Biberin_BD, Dumanski_BD, Elena_Efremova_BD, New_Year, Christmas_, Def_Day, Victory_Day, Bastilia_Day;
+holiday_date dates[14]; //if holiday_dates will be added, inevitably increase index [] value
+
+void matrix_print_clock();
 
 void clock_var_val() {
     sec = rtc.getSeconds();
@@ -445,24 +458,6 @@ void matrix_color_switcher() { //switches LED-color in appliance with time
   }
 }
 
-void matrix_print_clock() { 
-    uint8_t indentX, indentY, letter_width;
-    indentX = 5;
-    indentY = 3;
-    letter_width = 10;
-    matrix.fillScreen(0);
-    matrix.setTextSize(2); //size of text output    
-    input_with_first_zero(indentX, indentY, letter_width, hour);
-    indentX = 2*letter_width + 6;
-    matrix.setCursor(indentX, indentY);    
-    matrix.print(":");
-    indentX += 9;
-    input_with_first_zero(indentX, indentY, letter_width, minute);    
-    matrix_print_date();
-    print_alarm_status(alarm_flag);
-    
-    matrix.swapBuffers(false); //got out data from buffer(end of matrix_print()
-}
 
 void matrix_print_date() {    
     uint8_t indentX, indentY, letter_width;
@@ -484,6 +479,25 @@ void matrix_print_date() {
     show_week_day();  
     //print_week_day(week_day); if want, may to unlock
 
+}
+
+void matrix_print_clock() { 
+    uint8_t indentX, indentY, letter_width;
+    indentX = 5;
+    indentY = 3;
+    letter_width = 10;
+    matrix.fillScreen(0);
+    matrix.setTextSize(2); //size of text output    
+    input_with_first_zero(indentX, indentY, letter_width, hour);
+    indentX = 2*letter_width + 6;
+    matrix.setCursor(indentX, indentY);    
+    matrix.print(":");
+    indentX += 9;
+    input_with_first_zero(indentX, indentY, letter_width, minute);    
+    matrix_print_date();
+    print_alarm_status(alarm_flag);
+    
+    matrix.swapBuffers(false); //got out data from buffer(end of matrix_print()
 }
 
 void print_pres_n_humid() {
@@ -713,6 +727,181 @@ void clim_clock2 () {  //alternative version without "while" - no interrupts for
     }
 }
 
+void idiotism() { //for FoolDay
+    enum FD {buratino} jokes;
+    switch(jokes) {
+    }
+} 
+
+void holiday_label(holiday_date active_event) { //outputs LED-display congratulation label
+    uint8_t indentX, indentY, width, hight; //add condition to outputing label every hour
+    indentX = 3;
+    indentY = 1;
+    width = 5;
+    hight = 9;
+    matrix.setTextSize(1);
+    switch(active_event.holidays) { //enum events holidays
+        case WeddingDay: //TESTED
+            matrix.setCursor(indentX, indentY);
+            matrix.print("LENA +");
+            indentX += width;
+            indentY += hight;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("SASHA!!!");
+            break;
+        case SashaEfremovBD:
+            break;
+        case IlyaEfremovBD:
+            break;
+        case YouryEfremovBD:
+            break;
+        case KravtsovBD: //TESTED
+            matrix.setCursor(indentX, indentY);
+            matrix.print("KRAVTSOV");
+            indentY += hight;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("BIRTHDAY!");
+	          break;
+        case PetrovichBD: //TESTED
+            matrix.setCursor(indentX, indentY);
+            matrix.print("PETROVICH");
+            indentY += hight;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("BIRTHDAY!");
+            break;
+        case BiberinBD: //TESTED
+            indentX = 9;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("BIBERIN");
+            indentX = 3;
+            indentY += hight;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("BIRTHDAY!");
+            break;
+        case DumanskiBD: //TESTED
+            matrix.setCursor(indentX, indentY);
+            matrix.print("DUMANSKI");
+            indentY += hight;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("BIRTHDAY!");
+            break;
+        case ElenaEfremovaBD:
+            break;
+        case NewYear: //TESTED
+            indentX = 16; 
+            matrix.setCursor(indentX, indentY);
+            matrix.print("HAPPY");
+            indentX = 9;
+	          indentY += hight;
+	          matrix.setCursor(indentX, indentY);
+            matrix.print("NEW YEAR!!!");
+            break;
+        case Christmas: //TESTED
+            indentX = 16; 
+            matrix.setCursor(indentX, indentY);
+            matrix.print("HAPPY");
+            indentX = 3;
+	          indentY += hight;
+	          matrix.setCursor(indentX, indentY);
+            matrix.print("CHRISTMAS!");
+            break;
+        case DefDay: //TESTED
+            indentX = 3;
+	          matrix.setCursor(indentX, indentY);
+            matrix.print("POZDRAV 23");
+            indentY += hight;
+            indentX = 6;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("FEVRAL!!!");
+            break;
+        case VictoryDay: //TESTED
+            indentX = 25;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("DEN");
+            indentY += hight;
+            indentX = 7;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("POBEDY!!!");
+            break;
+        case BastiliaDay: //TESTED
+            indentX = 7;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("BASTILIA");
+            indentX = 3;
+            indentY += hight;
+            matrix.setCursor(indentX, indentY);
+            matrix.print("FALLS DAY!");
+            break;
+    }
+}
+
+holiday_date coincindence(holiday_date m[], int n) { //checks coincidences of dates with holidays, n = sizeof(dates)/sizeof(holiday_date)
+    for(int i = 0; i < n; i++) {
+        if (m[i].date == day && m[i].month == month) {
+            holiday_flag = true;           
+            return m[i];
+        }    
+    }
+}
+
+void matrix_holiday_print(holiday_date active_event) { //outputs LED-display content whole
+    matrix.fillScreen(0);
+    matrix_color_switcher();
+    holiday_label(active_event);  
+    matrix_print_date();
+    matrix.swapBuffers(false);
+}
+
+
+/*void call_MHP() { //THE MAIN FUNCTION - calls matrix_holiday_print() in depend of date and time
+    holiday_date active_event;
+    uint16_t duration = 60000; //time of matrix_holiday_print() on LED display
+    uint32_t time;     
+    active_event = coincindence(dates, sizeof(dates)/sizeof(holiday_date)); 
+    if (holiday_flag) {
+        show_holiday_flag();
+    }
+    if (holiday_flag && (minute == 1 || minute == 31)) {
+        time = millis();
+        while (millis() - time <= duration) {
+            matrix_holiday_print(active_event);
+        }
+    }
+    
+}
+*/
+
+bool stop_flag(bool holiday_flag) { //tested!!!  
+  uint32_t del;
+  if (!increm || !decrem) {
+    stp_flag = true;
+    del = millis();        
+    }
+  
+  if (stp_flag && millis() - del > 10000) {
+    stp_flag = false;
+    del = millis();                                  
+    } 
+  return stp_flag;  
+}
+
+void call_MHP() { //THE MAIN FUNCTION - calls matrix_holiday_print() in depend of date and time - TESTED
+    holiday_date active_event;
+    uint16_t duration = 60000; //time of matrix_holiday_print() on LED display
+    uint32_t time;
+    stp_flag = stop_flag(holiday_flag);     
+    active_event = coincindence(dates, sizeof(dates)/sizeof(holiday_date)); 
+    if (holiday_flag && (minute == 1 || minute == 31)) {
+        time = millis();
+        while (millis() - time <= duration && !stp_flag) {
+            matrix_holiday_print(active_event);            
+            if (!digitalRead(increm_pin) || !digitalRead(decrem_pin)) {
+              stp_flag = true;
+            }
+          }
+    }           
+}
+
 void setup() {
 Serial.begin(9600);
 pinMode(increm_pin, INPUT_PULLUP);
@@ -722,6 +911,63 @@ digitalWrite(alarm_pin, LOW);
 climateSensor.begin();
 matrix.begin(); //RGB-matrix is started
 matrix.setTextWrap(false); //text hyphenation is off
+
+wedding_day.holidays = WeddingDay;
+wedding_day.date = 8;
+wedding_day.month = 3;
+dates[0] = wedding_day;
+Sasha_Efremov_BD.holidays = SashaEfremovBD;
+Sasha_Efremov_BD.date = 20;
+Sasha_Efremov_BD.month = 10;
+dates[1] = Sasha_Efremov_BD;
+Ilya_Efremov_BD.holidays = IlyaEfremovBD;
+Ilya_Efremov_BD.date = 7;
+Ilya_Efremov_BD.month = 12;
+dates[2] = Ilya_Efremov_BD;
+Youry_Efremov_BD.holidays = YouryEfremovBD;
+Youry_Efremov_BD.date = 1;
+Youry_Efremov_BD.month = 6;
+dates[3] = Youry_Efremov_BD;
+Kravtsov_BD.holidays = KravtsovBD;
+Kravtsov_BD.date = 24;
+Kravtsov_BD.month = 12;
+dates[4] = Kravtsov_BD;
+Petrovich_BD.holidays = PetrovichBD;
+Petrovich_BD.date = 20;
+Petrovich_BD.month = 3;
+dates[5] = Petrovich_BD;
+Biberin_BD.holidays = BiberinBD;
+Biberin_BD.date = 28;
+Biberin_BD.month = 3;
+dates[6] = Biberin_BD;
+Dumanski_BD.holidays = DumanskiBD;
+Dumanski_BD.date = 23;
+Dumanski_BD.month = 5;
+dates[7] = Dumanski_BD;
+Elena_Efremova_BD.holidays = ElenaEfremovaBD;
+Elena_Efremova_BD.date = 21;
+Elena_Efremova_BD.month = 1;
+dates[8] = Elena_Efremova_BD;
+New_Year.holidays = NewYear;
+New_Year.date = 1;
+New_Year.month = 1;
+dates[9] = New_Year;
+Christmas_.holidays = Christmas;
+Christmas_.date = 7;
+Christmas_.month = 1;
+dates[10] = Christmas_;
+Def_Day.holidays = DefDay;
+Def_Day.date = 23;
+Def_Day.month = 2;
+dates[11] = Def_Day;
+Victory_Day.holidays = VictoryDay;
+Victory_Day.date = 9;
+Victory_Day.month = 5;
+dates[12] = Victory_Day;
+Bastilia_Day.holidays = BastiliaDay;
+Bastilia_Day.date = 14;
+Bastilia_Day.month = 7;
+dates[13] = Bastilia_Day;
 }
 
 void loop() {
@@ -742,15 +988,20 @@ setuper();
     if (!m_switcher) {
         
         clock_var_val();
-        Serial.println(climateSensor.getTemperatureCelcius());
-        Serial.println(climateSensor.getRelativeHumidity());
-        Serial.println(0.75*climateSensor.getPressure());
+        //Serial.println(climateSensor.getTemperatureCelcius());
+        //Serial.println(climateSensor.getRelativeHumidity());
+        //Serial.println(0.75*climateSensor.getPressure());
+        //Serial.print("HF ");
+        //Serial.println(holiday_flag);
+        Serial.print("SF ");
+        Serial.println(stp_flag);
+         
         matrix_color_switcher(); //switches led-light after 21 o'clock 
         //matrix_print_climate();
         //matrix_print_clock();
         
         alarm();
         clim_clock2();
-        
+        call_MHP();
     }
 }
