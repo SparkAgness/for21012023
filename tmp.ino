@@ -923,20 +923,38 @@ holiday_date coincindence(holiday_date m[], int n) { //checks coincidences of da
     for(int i = 0; i < n; i++) {
         if (m[i].date == day && m[i].month == month) {
             holiday_flag = true;
-            Serial.print("holiday_flag is ");
-            Serial.println(holiday_flag);           
+            //Serial.print("holiday_flag is ");
+            //Serial.println(holiday_flag);           
             return m[i];
         }    
-        /*if (m[i].date != day) {
-            holiday_flag = false;
-            Serial.print("holiday_flag is ");
-            Serial.println(holiday_flag);
-            return m[i];
-        }*/
-        
     }
+    holiday_flag = false;
+    //Serial.print("holiday_flag is ");
+    //Serial.println(holiday_flag);    
 }
 
+/*
+holiday_date coincindence(holiday_date m[], int n) {
+    for(int i = 0; i < n; i++) {
+        if(m[i].date == day) {
+            if (m[i].month == month) {
+                holiday_flag = true;
+                Serial.print("holiday_flag is ");
+                Serial.println(holiday_flag);
+                return m[i];                
+            }
+            continue;
+        }
+    }       
+        holiday_flag = false;
+        Serial.print("holiday_flag is ");
+        Serial.println(holiday_flag);
+        
+              
+    
+
+}
+*/
 void matrix_holiday_print(holiday_date active_event) { //outputs LED-display content whole
     matrix.fillScreen(0);
     matrix_color_switcher();
@@ -1065,7 +1083,7 @@ menu_switcher(&m_switcher, &switch_help);
 
 setuper();
   if (m_switcher) {    
-	    switcher(&clock, &switch_help);            
+	  switcher(&clock, &switch_help);            
       matrix_print_clock_setup(m_switcher);
       Serial.print(m_switcher);
       Serial.print("   ");    
