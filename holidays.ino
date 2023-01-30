@@ -69,7 +69,7 @@ Bastilia_Day.holidays = BastiliaDay;
 Bastilia_Day.date = 14;
 Bastilia_Day.month = 7;
 dates[13] = Bastilia_Day;
-pre_NewYear.holidays = pre_NewYear;
+pre_NewYear.holidays = preNewYear;
 pre_NewYear.date = 31;
 pre_NewYear.month = 12;
 dates[14] = pre_NewYear;
@@ -82,44 +82,56 @@ Fool_Day.date = 1;
 Fool_Day.month = 4;
 dates[16] = Fool_Day;
 
-void idiotism(enum FD jokes) { //for FoolDay
-    enum FD {buratino, kolobok, spina, posmotri} jokes; //replace to global partition
+void idiotism(uint8_t max_val, enum FD jokes, uint8_t indentX, uint8_t indentY, uint8_t hight) { //for FoolDay    
+    jokes = analogRead(randomizer) & max_val;
+    uint32_t del;
     switch(jokes) {
         case buratino:
+            del = millis();
+            while (millis() - del < 10000) {
             indentX = 7;
-	    matrix.setCursor(indentX, indentY);
+	          matrix.setCursor(indentX, indentY);
             matrix.print("BURATINO");
             indentX = 13;
             indentY += hight;
-            matrix.setCursor(indentX, inentY);
+            matrix.setCursor(indentX, indentY);
             matrix.print("UTONUL");
+            Serial.println("buratino utonul");            
+            }
             break;
         case kolobok:
+            del = millis();
+            while(millis() - del < 10000) {             
             indentX = 10;
-	    matrix.setCursor(indentX, indentY);
+	          matrix.setCursor(indentX, indentY);
             matrix.print("KOLOBOK");
             indentY += hight;
             indentX = 4;
             matrix.setCursor(indentX, indentY);
             matrix.print("POVESILSA");
-        break;
+            Serial.println("kolobok povesilsa");
+            
+            }
+            break;
         case spina:
-            indentX = 1;
-	    matrix.setCursor(indentX, indentY);
+            /*indentX = 1;
+	          matrix.setCursor(indentX, indentY);
             matrix.print("VASHA SPINA");
             indentX = 10;
             indentY += hight;
             matrix.setCursor(indentX, indentY);
-            matrix.print("BELAYA");
-        break;
+            matrix.print("BELAYA");*/
+            Serial.println("spina belaya");
+            break;
         case posmotri:
-            indentX = 1;
+            /*indentX = 1;
             matrix.setCursor(indentX, indentY);
             matrix.print("POSMOTRI");
             indentY += hight;
             matrix.setCursor(indentX, indentY);
-            matrix.print("POD NOGI");
-        break;
+            matrix.print("POD NOGI");*/
+            Serial.println("posmotri pod nogi");
+            break;
     }
 } 
 
@@ -240,6 +252,8 @@ void holiday_label(holiday_date active_event) { //outputs LED-display congratula
             matrix.print("VOISKA!!!");
             break;
         case FoolDay:
+            uint8_t max_jokes = 3;
+            idiotism(max_jokes, jokes, indentX, indentY, hight);
             break;
     }
 }
