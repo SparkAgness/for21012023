@@ -1,6 +1,7 @@
 #include <forcedClimate.h>
 #include <microDS3231.h>
 #include <RGBmatrixPanel.h>
+#include <Wire.h> //for i2c gadgets
 
 #define alarm_pin 3
 #define increm_pin 7
@@ -506,8 +507,10 @@ void matrix_print_clock() {
 void print_pres_n_humid() {
   uint8_t indentX, indentY, letter_width;
   uint16_t pressure, humidity;
-  pressure = 0.75*climateSensor.getPressure();
+  pressure = climateSensor.getPressure();
   humidity = climateSensor.getRelativeHumidity();
+  pressure = 0.75*climateSensor.getPressure(true);
+  humidity = climateSensor.getRelativeHumidity(true);
   indentX = 3;
   indentY = 21;
   letter_width = 5;  
@@ -527,7 +530,8 @@ void print_pres_n_humid() {
 
 void matrix_print_climate() {
     uint8_t indentX, indentY, letter_width, temperature;
-    temperature = (uint8_t)climateSensor.getTemperatureCelcius() - 3;
+    temperature = climateSensor.getTemperatureCelcius();
+    temperature = (uint8_t)climateSensor.getTemperatureCelcius(true) - 3;
     indentX = 3;
     indentY = 3;
     letter_width = 10;
@@ -996,6 +1000,7 @@ void call_MHP() { //THE MAIN FUNCTION - calls matrix_holiday_print() in depend o
 
 void setup() {
 Serial.begin(9600);
+Wire.begin(); //for i2c gadgets
 pinMode(increm_pin, INPUT_PULLUP);
 pinMode(decrem_pin, INPUT_PULLUP);
 pinMode (alarm_pin, OUTPUT);
@@ -1083,7 +1088,7 @@ menu_switcher(&m_switcher, &switch_help);
 
 setuper();
   if (m_switcher) {    
-	  switcher(&clock, &switch_help);            
+	    switcher(&clock, &switch_help);            
       matrix_print_clock_setup(m_switcher);
       Serial.print(m_switcher);
       Serial.print("   ");    
